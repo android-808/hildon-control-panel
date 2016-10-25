@@ -182,8 +182,8 @@ hcp_grid_init (HCPGrid *grid)
   gtk_icon_view_set_row_spacing (GTK_ICON_VIEW (grid), 0);
   gtk_icon_view_set_spacing (GTK_ICON_VIEW (grid), 6);
 
-  gtk_icon_view_set_orientation (GTK_ICON_VIEW (grid), 
-                                 GTK_ORIENTATION_HORIZONTAL);
+  gtk_icon_view_set_item_orientation (GTK_ICON_VIEW (grid), 
+                                      GTK_ORIENTATION_HORIZONTAL);
 
   /* Set default column number (for landscape view) */
   gtk_icon_view_set_columns (GTK_ICON_VIEW (grid), 2);
@@ -197,14 +197,14 @@ hcp_grid_refresh_icons (HCPGrid* grid)
   model = gtk_icon_view_get_model (GTK_ICON_VIEW (grid));
   gtk_tree_model_foreach (model, hcp_grid_update_icon, grid);
   GtkRequisition req;
-  gtk_widget_size_request (GTK_WIDGET(grid), &req);
+  gtk_widget_get_preferred_size (GTK_WIDGET(grid), &req, NULL);
   GtkAllocation alloc = {0,0,req.width, req.height};
   gtk_widget_size_allocate (GTK_WIDGET(grid), &alloc);
   gtk_widget_queue_resize (GTK_WIDGET (grid));
 }
 
 GtkWidget *
-hcp_grid_new (HildonUIMode uimode)
+hcp_grid_new (void)
 {
   GtkWidget *grid = g_object_new (HCP_TYPE_GRID, NULL);
 

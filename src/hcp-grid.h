@@ -57,7 +57,7 @@ typedef enum {
   HCP_STORE_NUM_COLUMNS
 } HCPStoreColumn;
 
-GtkWidget* hcp_grid_new (HildonUIMode);
+GtkWidget* hcp_grid_new (void);
 void hcp_grid_refresh_icons (HCPGrid*);
 
 G_END_DECLS

@@ -62,7 +62,9 @@ endif
 BUILT_SOURCES = hcp-marshalers.c \
                 hcp-marshalers.h
 
-controlpanel_LDFLAGS = $(MAEMO_LAUNCHER_LDFLAGS)
+controlpanel_LDFLAGS = \
+	$(MAEMO_LAUNCHER_LDFLAGS) \
+	-ldl
 
 controlpanel_LDADD = \
 	$(HCP_DEPS_LIBS)

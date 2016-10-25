@@ -33,7 +33,6 @@
 #include <gtk/gtk.h>
 #include <gconf/gconf-client.h>
 #include <glib/gi18n.h>
-#include <libgnomevfs/gnome-vfs.h>
 #include <dbus/dbus-glib.h>
 
 #include "hcp-app-list.h"
@@ -62,9 +61,9 @@ enum
 
 struct _HCPAppListPrivate 
 {
-  GHashTable             *apps;
-  GSList                 *categories;
-  GnomeVFSMonitorHandle  *monitor;
+  GHashTable   *apps;
+  GSList       *categories;
+  GFileMonitor *monitor;
 };
 
 #define HCP_SEPARATOR_DEFAULT _("copa_ia_extras")
@@ -92,10 +91,10 @@ hcp_monitor_reread_desktop_entries (HCPAppList *al)
 }
 
 static void 
-hcp_monitor_callback_f (GnomeVFSMonitorHandle *handle,
-                        const gchar *monitor_uri,
-                        const gchar *info_uri,
-                        GnomeVFSMonitorEventType event_type,
+hcp_monitor_callback_f (GFileMonitor *monitor,
+                        GFile *file,
+                        GFile *other_file,
+                        GFileMonitorEvent event_type,
                         HCPAppList *al)
 {
   if (!callback_pending) 
@@ -106,27 +105,32 @@ hcp_monitor_callback_f (GnomeVFSMonitorHandle *handle,
   }
 }
 
-static int 
-hcp_init_monitor (HCPAppList *al, const gchar *path)
+static void 
+hcp_init_monitor (HCPAppList *al, GFile *directory)
 {
-  GnomeVFSResult ret;
+  GFileMonitor *monitor = NULL;
+  GError *error = NULL;
 
-  g_return_val_if_fail (al, GNOME_VFS_ERROR_GENERIC);
-  g_return_val_if_fail (HCP_IS_APP_LIST (al), GNOME_VFS_ERROR_GENERIC);
-  g_return_val_if_fail (path, GNOME_VFS_ERROR_GENERIC);
+  al->priv->monitor = g_file_monitor_directory (directory,
+                                                G_FILE_MONITOR_NONE,
+                                                NULL,
+                                                &error);
+  if (error != NULL) {
+    gchar *path;
 
-  ret = gnome_vfs_monitor_add  (&al->priv->monitor, 
-                                path,
-                                GNOME_VFS_MONITOR_DIRECTORY,
-                                (GnomeVFSMonitorCallback) hcp_monitor_callback_f,
-                                al);
-
-  if (ret != GNOME_VFS_OK)
-  {
-      return ret;
+    path = g_file_get_parse_name (directory);
+    g_warning ("Unable to monitor directory %s: %s",
+               path, error->message);
+    g_error_free (error);
+    g_free (path);
+    return;
   }
 
-  return GNOME_VFS_OK;
+  if (monitor != NULL) {
+  g_signal_connect (monitor, "changed",
+                    G_CALLBACK (hcp_monitor_callback_f),
+                    al);
+  }
 }
 
 static void
@@ -230,7 +234,10 @@ hcp_app_list_init (HCPAppList *al)
 
   al->priv->monitor = NULL;
   
-  hcp_init_monitor (al, CONTROLPANEL_ENTRY_DIR);
+  GFile *directory;
+  directory = g_file_new_for_path (CONTROLPANEL_ENTRY_DIR);
+  hcp_init_monitor (al, directory);
+  g_object_unref (directory);
 }
 
 static void
@@ -293,7 +300,7 @@ hcp_app_list_finalize (GObject *object)
 
   if (priv->monitor)
   {
-    gnome_vfs_monitor_cancel (priv->monitor);
+    g_file_monitor_cancel (priv->monitor);
   }
     
   G_OBJECT_CLASS (hcp_app_list_parent_class)->finalize (object);

@@ -107,7 +107,6 @@ struct _HCPWindowPrivate
   HCPApp         *focused_item;
   HCPAppList     *al;
   GtkWidget      *view;
-  GtkWidget      *align;
 
   /* For state save data */
   gchar          *saved_focused_filename;
@@ -358,14 +357,11 @@ cleanup:
 static void 
 hcp_window_retrieve_configuration (HCPWindow *window)
 {
-  HCPWindowPrivate *priv;
   GConfClient *client = NULL;
   GError *error = NULL;
 
   g_return_if_fail (window);
   g_return_if_fail (HCP_IS_WINDOW (window));
-
-  priv = window->priv;
 
   client = gconf_client_get_default ();
 
@@ -385,15 +381,9 @@ hcp_window_keyboard_listener (GtkWidget * widget,
                               GdkEventKey * keyevent, 
 		              gpointer data)
 {
-  HCPWindow *window;
-  HCPWindowPrivate *priv;
-
   g_return_val_if_fail (widget, FALSE);
   g_return_val_if_fail (HCP_IS_WINDOW (widget), FALSE);
-
-  window = HCP_WINDOW (widget);
-  priv = window->priv;
-
+  
   if (keyevent->type == GDK_KEY_RELEASE) 
   {
     switch (keyevent->keyval)
@@ -662,7 +652,9 @@ hcp_window_construct_ui (HCPWindow *window)
   HildonProgram *program;
   
   HildonAppMenu *menu = NULL;
+#ifdef MAEMO_TOOLS
   GtkWidget *mi = NULL;
+#endif /* if MAEMO_TOOLS */
   GtkWidget *scrolled_window = NULL;
 
   g_return_if_fail (window);
@@ -703,7 +695,7 @@ hcp_window_construct_ui (HCPWindow *window)
 
   menu = HILDON_APP_MENU (hildon_app_menu_new ());
 
-  hildon_stackable_window_set_main_menu (HILDON_STACKABLE_WINDOW (window), menu);
+  hildon_window_set_app_menu (HILDON_WINDOW (window), menu);
 
 #ifdef MAEMO_TOOLS
 
@@ -787,19 +779,14 @@ hcp_window_construct_ui (HCPWindow *window)
 
   gtk_container_add (GTK_CONTAINER (window), scrolled_window);
 
-  window->priv->align = gtk_alignment_new (0,0,0,0);
-  gtk_alignment_set_padding (GTK_ALIGNMENT (window->priv->align),
-                             HILDON_MARGIN_DOUBLE, 
-                             0,
-                             HILDON_MARGIN_DOUBLE,
-                             HILDON_MARGIN_DOUBLE);
-
-  gtk_container_add (GTK_CONTAINER(window->priv->align),
-                     GTK_WIDGET(priv->view));
+  gtk_widget_set_margin_top(priv->view, HILDON_MARGIN_DOUBLE);
+  gtk_widget_set_margin_bottom(priv->view, 0);
+  gtk_widget_set_margin_start (priv->view, HILDON_MARGIN_DOUBLE);
+  gtk_widget_set_margin_end (priv->view, HILDON_MARGIN_DOUBLE);
 
   hildon_pannable_area_add_with_viewport (
           HILDON_PANNABLE_AREA (scrolled_window),
-          window->priv->align);
+          priv->view);
 }
 
 static void
@@ -810,7 +797,7 @@ hcp_window_size_request (HCPWindow          *window,
     if (G_UNLIKELY (! window->priv->view))
         return;
 
-    gtk_widget_set_size_request (window->priv->align,
+    gtk_widget_set_size_request (window->priv->view,
                                  requisition->width - HILDON_MARGIN_DEFAULT,
                                  -1);
 }                  

@@ -41,7 +41,7 @@
 
 #define DEF_SCREEN      gdk_display_get_default_screen (gdk_display_get_default ())
 
-G_DEFINE_TYPE (HCPAppView, hcp_app_view, GTK_TYPE_VBOX);
+G_DEFINE_TYPE (HCPAppView, hcp_app_view, GTK_TYPE_BOX);
 
 typedef enum
 {
@@ -79,7 +79,7 @@ hcp_app_view_create_grid ()
 {
   GtkWidget *grid;
 
-  grid = hcp_grid_new (HILDON_UI_MODE_NORMAL);
+  grid = hcp_grid_new ();
   gtk_widget_set_name (grid, "hildon-control-panel-grid");
 
   return grid;
@@ -88,9 +88,10 @@ hcp_app_view_create_grid ()
 static GtkWidget*
 hcp_app_view_create_separator (const gchar *label)
 {
-  GtkWidget *hbox = gtk_hbox_new (FALSE, 5);
-  GtkWidget *separator_1 = gtk_hseparator_new ();
-  GtkWidget *separator_2 = gtk_hseparator_new ();
+  GtkWidget *hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 5);
+  gtk_box_set_homogeneous (GTK_BOX (hbox), FALSE);
+  GtkWidget *separator_1 = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
+  GtkWidget *separator_2 = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
   GtkWidget *label_1 = gtk_label_new (label);
 
   gtk_widget_set_name (separator_1, "hildon-control-panel-separator");
@@ -139,7 +140,7 @@ hcp_app_view_launch_app (GtkWidget *widget,
   HCPApp *app = hcp_app_view_get_selected_app (widget, path);
 
   /* important for state saving of executed app */
-  g_signal_emit (G_OBJECT (widget->parent), 
+  g_signal_emit (G_OBJECT (gtk_widget_get_parent (widget)), 
                  signals[SIGNAL_FOCUS_CHANGED], 
                  0, app);
 
@@ -293,10 +294,6 @@ hcp_app_view_get_property (GObject    *gobject,
                            GValue     *value,
                            GParamSpec *pspec)
 {
-  HCPAppViewPrivate *priv;
-
-  priv = HCP_APP_VIEW (gobject)->priv;
-
   switch (prop_id)
   {
     default:
@@ -311,10 +308,6 @@ hcp_app_view_set_property (GObject      *gobject,
                            const GValue *value,
                            GParamSpec   *pspec)
 {
-  HCPAppViewPrivate *priv;
-
-  priv = HCP_APP_VIEW (gobject)->priv;
-  
   switch (prop_id)
   {
     default:

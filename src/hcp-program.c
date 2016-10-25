@@ -287,14 +287,14 @@ hcp_program_get_instance (void)
 void
 hcp_program_run (HCPProgram *program)
 {
-  gboolean dbus_activated;
-
   g_return_if_fail (program);
   g_return_if_fail (HCP_IS_PROGRAM (program));
 
+#if 0
+  gboolean dbus_activated;
   dbus_activated = g_getenv ("DBUS_STARTER_BUS_TYPE")?TRUE:FALSE;
 
-#if 0
+
   if (!dbus_activated)
   {
     /* When started from the command line we show the UI as default
